@@ -12,11 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaacf9b147a8b2541b1887cd2fca26cd, type: 3}
   m_Name: Q2
   m_EditorClassIdentifier: 
-  question: The mailbox contains an official looking letter and a perfumed letter.
-    According to the stamps they have been in there for a while.
+  question: 'In DogGame 2 our hero, the dog, was fighting:'
   answers:
-  - yes
-  - no
-  - 5
+  - other dogs
+  - himself
+  - cats
   - ice cream
-  correctAnswer: 1
+  correctAnswer: 2

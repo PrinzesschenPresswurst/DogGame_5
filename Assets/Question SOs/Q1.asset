@@ -12,10 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaacf9b147a8b2541b1887cd2fca26cd, type: 3}
   m_Name: Q1
   m_EditorClassIdentifier: 
-  question: You enter a forest clearing. There is a little house with a mailbox in
-    front.
+  question: 'DogGame 1 was famous for the following feature:'
   answers:
-  - yes
-  - no
-  - 5
-  correctAnswer: 0
+  - beat up cats
+  - pee everywhere
+  - breed dogs
+  correctAnswer: 1

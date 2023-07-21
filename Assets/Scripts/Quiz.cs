@@ -1,14 +1,10 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 using Button = UnityEngine.UI.Button;
 using Image = UnityEngine.UI.Image;
-using Toggle = UnityEngine.UIElements.Toggle;
+using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class Quiz : MonoBehaviour
 {
@@ -23,23 +19,40 @@ public class Quiz : MonoBehaviour
     [SerializeField] private Color correctAnswerColor;
     [SerializeField] private Color wrongAnswerColor;
     [SerializeField] private Color defaultColor;
+    [SerializeField] private TextMeshProUGUI scoreText;
+    private AudioSource audioSource;
+    [SerializeField] private AudioClip rightClip;
+    [SerializeField] private AudioClip wrongClip;
+    private int score;
 
-    void Start()
+    private void Start()
     {
-        GetNextQuestion();
         questionIndex = 0;
+        GetNextQuestion();
+        scoreText.text = "Score:" + score;
+        audioSource = GetComponent<AudioSource>();
     }
     
-    void GetNextQuestion()
+    public void GetNextQuestion()
     {
-        validButtonList.Clear();
-        EnableArrayButtons();
-        PickQuestionSO();
-        GenerateQuestionAndAnswer();
-        SetButtonState(true);
-        SetDefaultButtonColors();
-    }
+        
+        if (questionIndex == questionSOList.Count)
+        {
+            SceneManager.LoadScene("EndScreen");
+        }
 
+        else
+        {
+            validButtonList.Clear();
+            EnableArrayButtons();
+            PickQuestionSO();
+            GenerateQuestionAndAnswer();
+            SetButtonState(true);
+            SetDefaultButtonColors();
+            FindObjectOfType<AnswerTimer>().ResetTimer();
+        }
+    }
+    
     void PickQuestionSO()
     {
         if (questionIndex == questionSOList.Count)
@@ -49,9 +62,10 @@ public class Quiz : MonoBehaviour
         questionSO = questionSOList[questionIndex];
     }
 
-    void GenerateQuestionAndAnswer()
+    private void GenerateQuestionAndAnswer()
     {
         questionText.text = questionSO.GetQuestionText();
+        correctAnswerIndex = questionSO.GetCorrectAnswerIndex();
         
         int answerCount = questionSO.GetAnswerAmount();
         int buttonCount = answerButtonArray.Length;
@@ -63,42 +77,75 @@ public class Quiz : MonoBehaviour
                 validButtonList.Add(answerButtonArray[i].GetComponentInChildren<Button>());
                 answerButtonText = validButtonList[i].GetComponentInChildren<TextMeshProUGUI>();
                 answerButtonText.text = questionSO.GetAnswerTextByIndex(i);
-                //validButtonList.Add(answerButtonArray[i].GetComponentInChildren<Button>());
             }
             
             else if (i >= answerCount)
             {
                 answerButtonArray[i].SetActive(false);
-                //Destroy(answerButtonArray[i]);
             }
         }
     }
 
-    public void OnAnswerSelect(int index)
+    private void OnAnswerSelect(int index)
     {
-        correctAnswerIndex = questionSO.GetCorrectAnswerIndex();
+        FindObjectOfType<AnswerTimer>().StopTimer();
+        SetButtonState(false);
         Image currentButtonImage = answerButtonArray[index].GetComponent<Button>().image;
-        Image rightAnswerButtonImage = answerButtonArray[correctAnswerIndex].GetComponent<Button>().image;
-        string correctAnswerText = questionSO.GetAnswerTextByIndex(correctAnswerIndex);
-
+        
         if (index == correctAnswerIndex)
         {
             questionText.text = "right";
             currentButtonImage.color = correctAnswerColor;
+            score++;
+            UpdateScore();
+            audioSource.PlayOneShot(rightClip);
         }
         else if (index != correctAnswerIndex)
         {
-            questionText.text = "Nope, the right answer was: \n " + correctAnswerText;
+            ShowRightAnswer();
+            questionText.text = "Nope! \nThe right answer was: \n " + questionSO.GetAnswerTextByIndex(correctAnswerIndex);
             currentButtonImage.color = wrongAnswerColor;
-            rightAnswerButtonImage.color = Color.yellow;
+            score--;
+            UpdateScore();
+            audioSource.PlayOneShot(wrongClip);
         }
-
-        SetButtonState(false);
+        
         questionIndex ++;
-        Invoke("GetNextQuestion",1f);
+        
+    }
+    
+    public void TimeHasRunOutHandler()
+    {
+        SetButtonState(false);
+        ShowRightAnswer();
+        questionText.text = "Too Slow! \nThe right answer was: \n " + questionSO.GetAnswerTextByIndex(correctAnswerIndex);
+        score--;
+        UpdateScore();
+        audioSource.PlayOneShot(wrongClip);
+        
+        questionIndex ++;
     }
 
-    void SetButtonState(bool state)
+    private void ShowRightAnswer()
+    {
+        Image rightAnswerButtonImage = answerButtonArray[correctAnswerIndex].GetComponent<Button>().image;
+        rightAnswerButtonImage.color = Color.yellow;
+    }
+
+    private void UpdateScore()
+    {
+        scoreText.text = "Score:" + score;
+        if (score < 0)
+        {
+            scoreText.color = Color.red;
+        }
+        else if (score >= 0)
+        {
+            scoreText.color = Color.blue;
+        }
+    }
+    
+    private void SetButtonState(bool state)
     {
         foreach (var validButton in validButtonList)
         {
@@ -114,7 +161,7 @@ public class Quiz : MonoBehaviour
         } 
     }
 
-    void EnableArrayButtons()
+    private void EnableArrayButtons()
     {
         foreach (var answerButton in answerButtonArray)
         {
