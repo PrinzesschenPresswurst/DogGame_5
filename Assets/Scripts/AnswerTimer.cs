@@ -7,9 +7,9 @@ using UnityEngine.UI;
 public class AnswerTimer : MonoBehaviour
 {
     [SerializeField] float answerTime = 30.0f;
-    [SerializeField] private Button nextQuestionButton;
     private float timerValue;
     private Image dogClock;
+    [SerializeField] private Button nextQuestionButton;
     public bool isAnsweringQuestion;
 
     private void Start()
